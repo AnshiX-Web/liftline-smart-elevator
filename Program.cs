@@ -37,10 +37,6 @@ app.MapGet("/", () => Results.File(
     Path.Combine(app.Environment.ContentRootPath, "index.html"),
     "text/html"));
 
-app.MapGet("/college-data.json", () => Results.File(
-    Path.Combine(app.Environment.ContentRootPath, "college-data.json"),
-    "application/json"));
-
 app.MapGet("/api/health", () => Results.Ok(new { status = "healthy" }));
 
 app.MapGet("/api/sos", () => Results.Ok(

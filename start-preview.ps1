@@ -182,16 +182,6 @@ try {
             continue
         }
 
-        if ($request.HttpMethod -eq "GET" -and $path -eq "/college-data.json") {
-            $bytes = [System.IO.File]::ReadAllBytes((Join-Path $root "college-data.json"))
-            $response.StatusCode = 200
-            $response.ContentType = "application/json; charset=utf-8"
-            $response.ContentLength64 = $bytes.Length
-            $response.OutputStream.Write($bytes, 0, $bytes.Length)
-            $response.Close()
-            continue
-        }
-
         $notFound = [System.Text.Encoding]::UTF8.GetBytes("Not found")
         $response.StatusCode = 404
         $response.ContentType = "text/plain; charset=utf-8"
