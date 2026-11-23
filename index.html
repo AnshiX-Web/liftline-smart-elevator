@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#101b2c">
+    <title>Liftline — Emergency Response</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --ink: #172437;
+            --muted: #78869a;
+            --line: #e8edf2;
+            --canvas: #f5f7fa;
+            --panel: #fff;
+            --navy: #101b2c;
+            --navy-soft: #1b2b40;
+            --teal: #17a996;
+            --teal-soft: #e3f6f2;
+            --red: #df5360;
+            --red-soft: #fff0f1;
+            --amber: #d78a28;
+            --amber-soft: #fff5e6;
+            --blue: #537fca;
+            --blue-soft: #edf3ff;
+            --shadow: 0 8px 26px rgba(24, 42, 63, .055);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; min-width: 320px; background: var(--canvas); color: var(--ink); }
+        button, input, select { font: inherit; }
+        button { cursor: pointer; }
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+        .icon { width: 19px; height: 19px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+        .app { display: grid; grid-template-columns: 248px minmax(0, 1fr); min-height: 100vh; }
+        .sidebar { display: flex; flex-direction: column; min-height: 100vh; padding: 25px 16px 18px; color: #dce5ef; background: var(--navy); }
+        .brand { display: flex; align-items: center; gap: 11px; padding: 0 10px 29px; }
+        .brand-mark { display: grid; place-items: center; width: 37px; height: 37px; color: #fff; background: var(--teal); border-radius: 12px; }
+        .brand-mark .icon { width: 21px; height: 21px; }
+        .brand-name { color: white; font-size: 15px; font-weight: 750; letter-spacing: -.3px; }
+        .brand-caption { margin-top: 2px; color: #8492a5; font-size: 10px; letter-spacing: 1.15px; text-transform: uppercase; }
+        .workspace-label { padding: 0 12px 9px; color: #718198; font-size: 10px; font-weight: 700; letter-spacing: 1.3px; text-transform: uppercase; }
+        .nav-list { display: grid; gap: 5px; }
+        .nav-button { display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 12px; color: #9eacbd; background: transparent; border: 0; border-radius: 9px; text-align: left; font-size: 13px; transition: background .16s ease, color .16s ease; }
+        .nav-button:hover { color: white; background: rgba(255,255,255,.07); }
+        .nav-button.active { color: #fff; background: #23364a; box-shadow: inset 3px 0 var(--teal); }
+        .nav-button.active .icon { color: #53d2bf; }
+        .nav-count { margin-left: auto; min-width: 21px; padding: 2px 6px; color: #fff; background: #b94a59; border-radius: 20px; text-align: center; font-size: 10px; font-weight: 700; }
+        .sidebar-bottom { margin-top: auto; }
+        .support-card { padding: 13px; margin: 0 3px 17px; color: #c6d1de; background: #19293c; border: 1px solid #2a3a4d; border-radius: 11px; }
+        .support-card strong { display: block; margin-bottom: 5px; color: #f5f7fb; font-size: 12px; }
+        .support-card p { margin: 0; color: #9cacbf; font-size: 11px; line-height: 1.55; }
+        .sidebar-user { display: flex; align-items: center; gap: 10px; padding: 15px 9px 0; border-top: 1px solid #29384a; }
+        .avatar { display: grid; place-items: center; width: 34px; height: 34px; color: #146f64; background: #d9f3ee; border-radius: 50%; font-size: 11px; font-weight: 800; }
+        .user-name { color: #f1f5f9; font-size: 12px; font-weight: 650; }
+        .user-role { margin-top: 3px; color: #93a2b5; font-size: 10px; }
+        .main-area { min-width: 0; }
+        .topbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; min-height: 73px; padding: 0 36px; background: rgba(255,255,255,.9); border-bottom: 1px solid var(--line); }
+        .crumb { color: var(--muted); font-size: 12px; }
+        .crumb strong { color: var(--ink); font-weight: 650; }
+        .topbar-actions { display: flex; align-items: center; gap: 15px; }
+        .building-select { padding: 8px 29px 8px 11px; color: #46566a; background: white; border: 1px solid var(--line); border-radius: 8px; font-size: 12px; }
+        .icon-button { position: relative; display: grid; place-items: center; width: 36px; height: 36px; color: #66778d; background: white; border: 1px solid var(--line); border-radius: 9px; }
+        .icon-button .dot { position: absolute; top: 7px; right: 7px; width: 6px; height: 6px; background: var(--red); border: 1px solid white; border-radius: 50%; }
+        .storage-indicator { display: inline-flex; align-items: center; gap: 6px; padding: 6px 9px; color: #168976; background: var(--teal-soft); border-radius: 20px; font-size: 9px; font-weight: 750; white-space: nowrap; }
+        .storage-indicator::before { width: 6px; height: 6px; background: currentColor; border-radius: 50%; content: ""; }
+        .storage-indicator.local { color: #9c6a1e; background: var(--amber-soft); }
+        .mobile-brand { display: none; align-items: center; gap: 9px; color: var(--ink); font-size: 14px; font-weight: 750; }
+        .content { width: min(1470px, 100%); padding: 31px 36px 48px; margin: 0 auto; }
+        .page-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 22px; }
+        .eyebrow { margin-bottom: 7px; color: var(--teal); font-size: 10px; font-weight: 800; letter-spacing: 1.45px; text-transform: uppercase; }
+        h1 { margin: 0; color: var(--ink); font-size: clamp(24px, 2.5vw, 29px); line-height: 1.2; letter-spacing: -.8px; }
+        .page-subtitle { margin: 7px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+        .button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 38px; padding: 0 14px; color: #405168; background: #fff; border: 1px solid var(--line); border-radius: 8px; font-size: 12px; font-weight: 650; transition: transform .12s, background .12s; }
+        .button:hover { background: #f8fafc; transform: translateY(-1px); }
+        .button .icon { width: 16px; height: 16px; }
+        .button-primary { color: white; background: var(--teal); border-color: var(--teal); }
+        .button-primary:hover { background: #128e7e; }
+        .button-danger { color: white; background: var(--red); border-color: var(--red); }
+        .button-danger:hover { background: #c84755; }
+        .button-small { min-height: 30px; padding: 0 10px; font-size: 11px; }
+        .hero { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 165px; padding: 27px 31px; overflow: hidden; color: white; background: linear-gradient(110deg, #14253a, #1d3948); border-radius: 14px; box-shadow: var(--shadow); }
+        .hero::after { position: absolute; top: -105px; right: 92px; width: 300px; height: 300px; border: 1px solid rgba(105,220,204,.16); border-radius: 50%; content: ""; box-shadow: 0 0 0 34px rgba(105,220,204,.045), 0 0 0 70px rgba(105,220,204,.035); }
+        .hero-copy { position: relative; z-index: 1; max-width: 550px; }
+        .hero-kicker { margin-bottom: 9px; color: #84dfd0; font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
+        .hero h2 { margin: 0; color: white; font-size: 22px; letter-spacing: -.45px; }
+        .hero p { margin: 8px 0 0; color: #b8c8d3; font-size: 12px; line-height: 1.55; }
+        .hero-status { position: relative; z-index: 1; display: flex; align-items: center; gap: 9px; min-width: 178px; padding: 13px 15px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.13); border-radius: 10px; }
+        .pulse { width: 8px; height: 8px; background: #4ed1aa; border-radius: 50%; box-shadow: 0 0 0 5px rgba(78,209,170,.15); }
+        .hero-status strong { display: block; color: white; font-size: 11px; }
+        .hero-status span:last-child { display: block; margin-top: 3px; color: #adc1ce; font-size: 10px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 14px; margin: 17px 0; }
+        .stat-card, .panel, .lift-card, .team-card, .maintenance-card, .role-card { background: var(--panel); border: 1px solid var(--line); border-radius: 11px; box-shadow: var(--shadow); }
+        .stat-card { min-height: 118px; padding: 17px 18px; }
+        .stat-top { display: flex; align-items: center; justify-content: space-between; color: var(--muted); font-size: 11px; font-weight: 600; }
+        .stat-icon { display: grid; place-items: center; width: 30px; height: 30px; color: var(--teal); background: var(--teal-soft); border-radius: 9px; }
+        .stat-icon .icon { width: 16px; height: 16px; }
+        .stat-icon.red { color: var(--red); background: var(--red-soft); }
+        .stat-icon.amber { color: var(--amber); background: var(--amber-soft); }
+        .stat-icon.blue { color: var(--blue); background: var(--blue-soft); }
+        .stat-value { margin-top: 10px; color: var(--ink); font-size: 25px; font-weight: 750; letter-spacing: -.8px; }
+        .stat-foot { margin-top: 4px; color: #98a3b2; font-size: 10px; }
+        .positive { color: #15917f; font-weight: 650; }
+        .dashboard-grid { display: grid; grid-template-columns: minmax(0,1.7fr) minmax(260px,.9fr); gap: 16px; align-items: start; }
+        .panel { min-width: 0; padding: 18px; }
+        .panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 17px; }
+        .panel-heading h3 { margin: 0; color: var(--ink); font-size: 14px; letter-spacing: -.2px; }
+        .panel-heading p { margin: 5px 0 0; color: var(--muted); font-size: 10px; }
+        .text-link { padding: 4px 0; color: #118f81; background: transparent; border: 0; font-size: 11px; font-weight: 700; }
+        .table-wrap { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { padding: 9px 9px; color: #91a0b0; border-bottom: 1px solid var(--line); font-size: 9px; font-weight: 750; letter-spacing: .75px; text-transform: uppercase; white-space: nowrap; }
+        td { padding: 12px 9px; color: #5e6c7f; border-bottom: 1px solid #f0f3f6; font-size: 11px; white-space: nowrap; }
+        tr:last-child td { border-bottom: 0; }
+        .cell-strong { color: #27364a; font-weight: 700; }
+        .cell-sub { margin-top: 3px; color: #9aa6b4; font-size: 10px; }
+        .status { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 20px; font-size: 9px; font-weight: 750; }
+        .status::before { width: 5px; height: 5px; background: currentColor; border-radius: 50%; content: ""; }
+        .status-received { color: #bd4d59; background: var(--red-soft); }
+        .status-acknowledged { color: #ab6e1d; background: var(--amber-soft); }
+        .status-dispatched { color: #4e74b4; background: var(--blue-soft); }
+        .status-resolved { color: #168976; background: var(--teal-soft); }
+        .empty-state { padding: 28px 15px; color: #8a97a7; text-align: center; font-size: 12px; line-height: 1.6; }
+        .empty-state strong { display: block; margin-bottom: 4px; color: #4d5d70; font-size: 12px; }
+        .fleet-list { display: grid; gap: 11px; }
+        .fleet-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 11px; background: #fafbfd; border: 1px solid #eef2f5; border-radius: 9px; }
+        .fleet-left { display: flex; align-items: center; gap: 10px; }
+        .lift-icon { display: grid; place-items: center; width: 31px; height: 31px; color: #5779b3; background: #edf3ff; border-radius: 8px; }
+        .lift-icon .icon { width: 16px; height: 16px; }
+        .fleet-title { color: #334258; font-size: 11px; font-weight: 700; }
+        .fleet-detail { margin-top: 3px; color: #97a2af; font-size: 9px; }
+        .online { color: #168976; font-size: 9px; font-weight: 700; }
+        .online::before { display: inline-block; width: 6px; height: 6px; margin-right: 5px; background: #22b394; border-radius: 50%; content: ""; }
+        .content-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 15px; }
+        .lift-card, .team-card, .maintenance-card, .role-card { padding: 18px; }
+        .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+        .card-title { color: #29394e; font-size: 13px; font-weight: 750; }
+        .card-description { margin: 5px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+        .card-meta { display: flex; flex-wrap: wrap; gap: 14px; margin: 17px 0; color: #728196; font-size: 10px; }
+        .card-actions { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 13px; border-top: 1px solid #eff2f5; }
+        .progress-bar { height: 6px; margin-top: 9px; overflow: hidden; background: #edf1f4; border-radius: 10px; }
+        .progress-bar span { display: block; height: 100%; background: var(--teal); border-radius: inherit; }
+        .person-row { display: flex; align-items: center; gap: 10px; margin-top: 15px; }
+        .person-row .avatar { width: 30px; height: 30px; color: #526ca4; background: #eaf0fb; }
+        .tag { display: inline-block; padding: 4px 7px; color: #64758a; background: #f0f3f6; border-radius: 5px; font-size: 9px; font-weight: 700; }
+        .status-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; padding: 11px 13px; margin-bottom: 17px; color: #5b6d7f; background: #fff; border: 1px solid var(--line); border-radius: 9px; font-size: 11px; }
+        .status-strip .pulse { width: 7px; height: 7px; }
+        .sos-layout { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(290px,.9fr); gap: 17px; align-items: start; }
+        .sos-card { padding: 23px; }
+        .sos-card h2 { margin: 0; color: var(--ink); font-size: 17px; }
+        .sos-card > p { margin: 6px 0 19px; color: var(--muted); font-size: 11px; line-height: 1.6; }
+        .location-box { display: flex; align-items: flex-start; gap: 11px; padding: 13px; margin-bottom: 19px; background: #f7f9fb; border: 1px solid #e8edf2; border-radius: 9px; }
+        .location-box .icon { color: var(--teal); }
+        .location-box strong { display: block; color: #314155; font-size: 11px; }
+        .location-box span { display: block; margin-top: 4px; color: #8290a1; font-size: 10px; }
+        .field-label { display: block; margin: 0 0 8px; color: #536378; font-size: 10px; font-weight: 750; letter-spacing: .3px; }
+        .radio-list { display: grid; gap: 8px; }
+        .radio-option { display: flex; align-items: center; gap: 9px; padding: 11px; color: #47586d; border: 1px solid #e8edf2; border-radius: 8px; font-size: 11px; cursor: pointer; }
+        .radio-option:has(input:checked) { background: #fff8f8; border-color: #efb9bf; }
+        .radio-option input { accent-color: var(--red); }
+        .sos-button { width: 100%; min-height: 45px; margin-top: 17px; border-radius: 9px; font-size: 11px; font-weight: 800; letter-spacing: .3px; }
+        .fine-print { margin-top: 10px !important; color: #98a4b1 !important; font-size: 9px !important; text-align: center; }
+        .tracking-card { padding: 22px; }
+        .tracking-heading { display: flex; align-items: center; gap: 10px; }
+        .tracking-check { display: grid; place-items: center; width: 34px; height: 34px; color: #168976; background: var(--teal-soft); border-radius: 50%; font-size: 18px; font-weight: 800; }
+        .tracking-heading h3 { margin: 0; color: #2b3a4d; font-size: 13px; }
+        .tracking-heading p { margin: 4px 0 0; color: #8794a2; font-size: 10px; }
+        .tracking-id { padding: 12px; margin: 17px 0; background: #f7f9fb; border: 1px solid var(--line); border-radius: 8px; }
+        .tracking-id span { display: block; color: #9aa6b4; font-size: 9px; font-weight: 750; letter-spacing: .8px; }
+        .tracking-id strong { display: block; margin-top: 5px; color: #324258; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px; }
+        .timeline { display: grid; gap: 0; margin-top: 18px; }
+        .timeline-item { position: relative; min-height: 48px; padding: 0 0 16px 24px; border-left: 1px solid #dfe6eb; }
+        .timeline-item:last-child { min-height: 26px; border-color: transparent; }
+        .timeline-dot { position: absolute; top: 1px; left: -5px; width: 9px; height: 9px; background: #dce3e9; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 0 1px #dce3e9; }
+        .timeline-item.done .timeline-dot { background: var(--teal); box-shadow: 0 0 0 1px var(--teal); }
+        .timeline-item strong { display: block; color: #536276; font-size: 10px; }
+        .timeline-item span { display: block; margin-top: 4px; color: #97a3b0; font-size: 9px; }
+        .toast { position: fixed; right: 22px; bottom: 22px; z-index: 20; max-width: min(380px, calc(100vw - 32px)); padding: 13px 16px; color: white; background: #22354a; border-radius: 9px; box-shadow: 0 12px 36px rgba(15,27,42,.22); font-size: 12px; }
+        .toast.error { background: #b6424e; }
+        .toast[hidden] { display: none; }
+        .loading { color: #94a0ae; font-size: 11px; }
+        @media (max-width: 1100px) {
+            .app { grid-template-columns: 220px minmax(0,1fr); }
+            .content { padding: 26px 24px 40px; }
+            .topbar { padding: 0 24px; }
+            .stats-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+        }
+        @media (max-width: 820px) {
+            .app { display: block; }
+            .sidebar { position: sticky; top: 0; z-index: 5; min-height: auto; padding: 10px 14px 0; }
+            .brand { display: none; }
+            .workspace-label, .sidebar-bottom { display: none; }
+            .nav-list { display: flex; gap: 4px; overflow-x: auto; padding: 0 0 8px; scrollbar-width: none; }
+            .nav-list::-webkit-scrollbar { display: none; }
+            .nav-button { flex: 0 0 auto; width: auto; gap: 7px; padding: 9px 10px; font-size: 11px; white-space: nowrap; }
+            .nav-button.active { box-shadow: inset 0 -2px var(--teal); }
+            .nav-button .icon { width: 16px; height: 16px; }
+            .topbar { min-height: 58px; padding: 0 18px; }
+            .mobile-brand { display: flex; }
+            .mobile-brand .brand-mark { width: 29px; height: 29px; border-radius: 9px; }
+            .mobile-brand .icon { width: 17px; height: 17px; }
+            .crumb { display: none; }
+            .content { padding: 23px 18px 36px; }
+        }
+        @media (max-width: 650px) {
+            .topbar-actions { gap: 8px; }
+            .building-select { max-width: 145px; padding-left: 8px; font-size: 10px; }
+            .hero { align-items: flex-start; flex-direction: column; padding: 22px; }
+            .hero-status { min-width: 0; }
+            .dashboard-grid, .sos-layout { grid-template-columns: 1fr; }
+            .content-grid { grid-template-columns: 1fr; }
+            .stats-grid { gap: 9px; }
+            .stat-card { min-height: 108px; padding: 13px; }
+            .stat-value { font-size: 22px; }
+            .stat-top { font-size: 10px; }
+            .page-heading { align-items: center; }
+            .page-heading > .button { flex: 0 0 auto; padding: 0 10px; font-size: 10px; }
+            .panel { padding: 14px; }
+            .sos-card, .tracking-card { padding: 18px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+        }
+    </style>
+</head>
+<body>
+    <svg class="sr-only" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+        <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+        <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></symbol>
+        <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+        <symbol id="i-lift" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M12 3v18M9 8l-1.5 2H10zM15 8l-1.5 2H16z"/></symbol>
+        <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.7 6.3a5 5 0 0 0-6.4 6.4L3 18l3 3 5.3-5.3a5 5 0 0 0 6.4-6.4L14 13l-3-3z"/></symbol>
+        <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11"/><path d="m9 12 2 2 4-4"/></symbol>
+        <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+        <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+        <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+        <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+        <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+        <symbol id="i-bolt" viewBox="0 0 24 24"><path d="m13 2-3 9h7L8 22l3-9H4z"/></symbol>
+    </svg>
+    <div class="app">
+        <aside class="sidebar" aria-label="Main navigation">
+            <div class="brand">
+                <span class="brand-mark"><svg class="icon"><use href="#i-lift"/></svg></span>
+                <span><span class="brand-name">liftline</span><span class="brand-caption">Safety operations</span></span>
+            </div>
+            <div class="workspace-label">Operations</div>
+            <nav class="nav-list" id="navigation">
+                <button class="nav-button active" data-view="overview"><svg class="icon"><use href="#i-grid"/></svg>Overview</button>
+                <button class="nav-button" data-view="incidents"><svg class="icon"><use href="#i-bell"/></svg>Emergencies<span id="nav-count" class="nav-count" hidden>0</span></button>
+                <button class="nav-button" data-view="rescue"><svg class="icon"><use href="#i-users"/></svg>Rescue team</button>
+                <button class="nav-button" data-view="elevators"><svg class="icon"><use href="#i-lift"/></svg>Elevators</button>
+                <button class="nav-button" data-view="maintenance"><svg class="icon"><use href="#i-wrench"/></svg>Maintenance</button>
+                <button class="nav-button" data-view="passenger"><svg class="icon"><use href="#i-bolt"/></svg>Passenger SOS</button>
+                <button class="nav-button" data-view="admin"><svg class="icon"><use href="#i-shield"/></svg>Administration</button>
+            </nav>
+            <div class="sidebar-bottom">
+                <div class="support-card"><strong>Safety desk</strong><p>Available around the clock for urgent building response.</p></div>
+                <div class="sidebar-user">
+                    <span class="avatar">JM</span>
+                    <span><span class="user-name">Jordan Miller</span><span class="user-role">Building administrator</span></span>
+                </div>
+            </div>
+        </aside>
+
+        <div class="main-area">
+            <header class="topbar">
+                <div class="mobile-brand"><span class="brand-mark"><svg class="icon"><use href="#i-lift"/></svg></span>liftline</div>
+                <div class="crumb">Workspace <span aria-hidden="true">/</span> <strong id="breadcrumb">Overview</strong></div>
+                <div class="topbar-actions">
+                    <label class="sr-only" for="building-select">Select building</label>
+                    <select class="building-select" id="building-select" aria-label="Select building">
+                        <option>Northpoint Residences</option>
+                        <option>Harbor House</option>
+                        <option>Central Exchange</option>
+                    </select>
+                    <span id="storage-mode" class="storage-indicator" hidden></span>
+                    <button class="icon-button" id="notification-button" type="button" aria-label="View emergencies"><svg class="icon"><use href="#i-bell"/></svg><span class="dot"></span></button>
+                </div>
+            </header>
+            <main class="content" id="content" tabindex="-1" aria-live="polite">
+                <p class="loading">Loading safety operations…</p>
+            </main>
+        </div>
+    </div>
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+    <script>
+        const state = {
+            view: "overview",
+            alerts: [],
+            currentAlert: null,
+            storageMode: "checking",
+            toastTimer: null
+        };
+        const lifts = [
+            { id: "A-01", building: "North tower", floor: "Floor 18", state: "Operational", uptime: 99.9 },
+            { id: "A-02", building: "North tower", floor: "Floor 08", state: "Operational", uptime: 99.8 },
+            { id: "A-03", building: "North tower", floor: "Floor 12", state: "Operational", uptime: 99.6 },
+            { id: "B-01", building: "South tower", floor: "Floor 21", state: "Inspection due", uptime: 96.2 }
+        ];
+        const team = [
+            { name: "Priya Sharma", role: "Response lead", initials: "PS", status: "On site", eta: "North tower lobby" },
+            { name: "Daniel Kim", role: "Lift technician", initials: "DK", status: "Available", eta: "South tower" },
+            { name: "Sam Rivera", role: "First responder", initials: "SR", status: "Available", eta: "Main reception" }
+        ];
+        const maintenance = [
+            { id: "WO-2841", lift: "Elevator B-01", issue: "Door sensor inspection", priority: "Scheduled", due: "Today, 2:30 PM" },
+            { id: "WO-2838", lift: "Elevator A-04", issue: "Routine brake test", priority: "In progress", due: "Today, 4:00 PM" },
+            { id: "WO-2829", lift: "Elevator A-02", issue: "Cabin light replacement", priority: "Completed", due: "Nov 21, 2026" }
+        ];
+        const viewTitles = {
+            overview: "Overview", incidents: "Emergencies", rescue: "Rescue team",
+            elevators: "Elevators", maintenance: "Maintenance", passenger: "Passenger SOS",
+            admin: "Administration"
+        };
+        const content = document.getElementById("content");
+
+        function escapeHtml(value) {
+            return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+                "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+            })[char]);
+        }
+        function icon(name) {
+            return `<svg class="icon" aria-hidden="true"><use href="#i-${name}"></use></svg>`;
+        }
+        function showToast(message, isError) {
+            const toast = document.getElementById("toast");
+            toast.textContent = message;
+            toast.classList.toggle("error", Boolean(isError));
+            toast.hidden = false;
+            window.clearTimeout(state.toastTimer);
+            state.toastTimer = window.setTimeout(() => { toast.hidden = true; }, 4200);
+        }
+        async function api(path, options) {
+            const response = await fetch(path, {
+                headers: { "Content-Type": "application/json" },
+                ...options
+            });
+            let result;
+            try {
+                result = await response.json();
+            } catch {
+                throw new Error("The safety service returned an unreadable response.");
+            }
+            if (!response.ok || result.success === false) {
+                throw new Error(result.error || `The safety service returned ${response.status}.`);
+            }
+            return result;
+        }
+        async function refreshAlerts() {
+            if (state.storageMode === "local") {
+                state.alerts = readLocalAlerts();
+            } else {
+                const result = await api("/api/sos");
+                state.alerts = Array.isArray(result) ? result : result.alerts;
+            }
+            if (!Array.isArray(state.alerts)) throw new Error("The safety service returned an invalid emergency list.");
+            updateNavCount();
+            render();
+        }
+        function readLocalAlerts() {
+            const saved = window.localStorage.getItem("liftline-alerts");
+            if (!saved) return [];
+            const parsed = JSON.parse(saved);
+            if (!Array.isArray(parsed)) throw new Error("Saved browser alert data is invalid.");
+            return parsed;
+        }
+        function saveLocalAlerts() {
+            window.localStorage.setItem("liftline-alerts", JSON.stringify(state.alerts));
+        }
+        function updateStorageIndicator() {
+            const indicator = document.getElementById("storage-mode");
+            if (state.storageMode === "checking") {
+                indicator.hidden = true;
+                return;
+            }
+            const isLocal = state.storageMode === "local";
+            indicator.textContent = isLocal ? "Browser demo · saved here" : "Live · synced";
+            indicator.classList.toggle("local", isLocal);
+            indicator.hidden = false;
+        }
+        function updateNavCount() {
+            const count = state.alerts.filter((alert) => alert.status !== "Resolved").length;
+            const badge = document.getElementById("nav-count");
+            badge.textContent = count;
+            badge.hidden = count === 0;
+        }
+        function statusClass(status) {
+            if (status === "Acknowledged") return "status-acknowledged";
+            if (status === "Rescue dispatched") return "status-dispatched";
+            if (status === "Resolved") return "status-resolved";
+            return "status-received";
+        }
+        function statusBadge(status) {
+            return `<span class="status ${statusClass(status)}">${escapeHtml(status || "Received")}</span>`;
+        }
+        function timestamp(value) {
+            const date = new Date(value);
+            return Number.isNaN(date.getTime()) ? "Just now" : date.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+        }
+        function alertRows(items) {
+            if (!items.length) return `<tr><td colspan="5"><div class="empty-state"><strong>All clear for now</strong>New passenger alerts will appear here as soon as they are submitted.</div></td></tr>`;
+            return items.map((alert) => `<tr>
+                <td><span class="cell-strong">${escapeHtml(alert.emergencyId || alert.EmergencyId)}</span><div class="cell-sub">${escapeHtml(timestamp(alert.submittedAt || alert.SubmittedAt))}</div></td>
+                <td><span class="cell-strong">${escapeHtml(alert.elevatorId || alert.ElevatorId)}</span><div class="cell-sub">${escapeHtml(alert.location)}</div></td>
+                <td>${escapeHtml(alert.passengerName || alert.PassengerName)}</td>
+                <td>${statusBadge(alert.status || "Received")}</td>
+                <td>${actionButton(alert)}</td>
+            </tr>`).join("");
+        }
+        function actionButton(alert) {
+            const status = alert.status || "Received";
+            const next = status === "Received" ? "Acknowledged" : status === "Acknowledged" ? "Rescue dispatched" : status === "Rescue dispatched" ? "Resolved" : "";
+            if (!next) return `<span class="cell-sub">Closed</span>`;
+            const label = next === "Rescue dispatched" ? "Dispatch" : next === "Resolved" ? "Resolve" : "Acknowledge";
+            return `<button class="button button-small" type="button" data-alert-action="${escapeHtml(alert.emergencyId || alert.EmergencyId)}" data-next-status="${escapeHtml(next)}">${label}</button>`;
+        }
+        function pageHeading(eyebrow, title, subtitle, action) {
+            return `<div class="page-heading"><div><div class="eyebrow">${eyebrow}</div><h1>${title}</h1><p class="page-subtitle">${subtitle}</p></div>${action || ""}</div>`;
+        }
+        function renderOverview() {
+            const active = state.alerts.filter((alert) => alert.status !== "Resolved");
+            const resolved = state.alerts.filter((alert) => alert.status === "Resolved").length;
+            return `${pageHeading("MONDAY, NOVEMBER 23", "Good morning, Jordan", "Here’s the safety picture across Northpoint Residences today.", `<button class="button button-danger" type="button" data-go="passenger">${icon("plus")} New SOS report</button>`)}
+                <section class="hero" aria-label="Building status">
+                    <div class="hero-copy"><div class="hero-kicker">Northpoint Residences · Safety operations</div><h2>Every lift. Every moment. Covered.</h2><p>Monitor emergency calls, coordinate on-site response, and keep residents moving safely.</p></div>
+                    <div class="hero-status"><span class="pulse"></span><span><strong id="system-health-label">All systems operational</strong><span id="system-health-detail">Last system check · just now</span></span></div>
+                </section>
+                <section class="stats-grid" aria-label="Building safety metrics">
+                    <article class="stat-card"><div class="stat-top">Active emergencies<span class="stat-icon red">${icon("bell")}</span></div><div class="stat-value">${active.length}</div><div class="stat-foot">${active.length ? "Requires response" : "No active incidents"}</div></article>
+                    <article class="stat-card"><div class="stat-top">Lifts online<span class="stat-icon">${icon("lift")}</span></div><div class="stat-value">14 <span style="font-size:14px;color:#a0aab6;font-weight:500">/ 16</span></div><div class="stat-foot"><span class="positive">87.5%</span> fleet availability</div></article>
+                    <article class="stat-card"><div class="stat-top">Avg. response time<span class="stat-icon blue">${icon("clock")}</span></div><div class="stat-value">4.2 <span style="font-size:14px;font-weight:550">min</span></div><div class="stat-foot"><span class="positive">−12%</span> vs. last month</div></article>
+                    <article class="stat-card"><div class="stat-top">Resolved this month<span class="stat-icon amber">${icon("check")}</span></div><div class="stat-value">${resolved + 28}</div><div class="stat-foot">Across all buildings</div></article>
+                </section>
+                <section class="dashboard-grid">
+                    <article class="panel"><div class="panel-heading"><div><h3>Recent emergencies</h3><p>Live passenger alerts and response progress</p></div><button class="text-link" type="button" data-go="incidents">View all →</button></div>
+                        <div class="table-wrap"><table><thead><tr><th>Alert</th><th>Elevator &amp; location</th><th>Passenger</th><th>Status</th><th>Action</th></tr></thead><tbody>${alertRows(state.alerts.slice(0, 5))}</tbody></table></div>
+                    </article>
+                    <article class="panel"><div class="panel-heading"><div><h3>Elevator fleet</h3><p>Northpoint · 14 of 16 online</p></div><button class="text-link" type="button" data-go="elevators">Manage →</button></div>
+                        <div class="fleet-list">${lifts.slice(0, 3).map((lift) => `<div class="fleet-row"><div class="fleet-left"><span class="lift-icon">${icon("lift")}</span><span><span class="fleet-title">Elevator ${lift.id}</span><span class="fleet-detail">${lift.building} · ${lift.floor}</span></span></div><span class="online">Online</span></div>`).join("")}</div>
+                    </article>
+                </section>`;
+        }
+        function renderIncidents() {
+            return `${pageHeading("LIVE RESPONSE", "Emergency center", "Review passenger calls and move each alert through to resolution.", `<button class="button button-danger" type="button" data-go="passenger">${icon("plus")} New SOS report</button>`)}
+                <div class="status-strip"><span class="pulse"></span><strong>${state.alerts.filter((item) => item.status !== "Resolved").length} active</strong><span>·</span><span>Updates are saved automatically and remain available after restart.</span></div>
+                <section class="panel"><div class="panel-heading"><div><h3>All emergency alerts</h3><p>${state.alerts.length} recorded alert${state.alerts.length === 1 ? "" : "s"}</p></div><button class="button button-small" type="button" data-refresh>Refresh</button></div>
+                <div class="table-wrap"><table><thead><tr><th>Alert ID</th><th>Elevator &amp; location</th><th>Passenger</th><th>Incident</th><th>Status</th><th>Next step</th></tr></thead><tbody>${state.alerts.length ? state.alerts.map((alert) => `<tr>
+                    <td><span class="cell-strong">${escapeHtml(alert.emergencyId || alert.EmergencyId)}</span><div class="cell-sub">${escapeHtml(timestamp(alert.submittedAt || alert.SubmittedAt))}</div></td>
+                    <td><span class="cell-strong">${escapeHtml(alert.elevatorId || alert.ElevatorId)}</span><div class="cell-sub">${escapeHtml(alert.location)}</div></td>
+                    <td>${escapeHtml(alert.passengerName || alert.PassengerName)}</td><td>${escapeHtml(alert.category)}</td>
+                    <td>${statusBadge(alert.status || "Received")}</td><td>${actionButton(alert)}</td>
+                </tr>`).join("") : `<tr><td colspan="6"><div class="empty-state"><strong>No emergency alerts recorded</strong>Passenger SOS calls will be listed here with their live response status.</div></td></tr>`}</tbody></table></div></section>`;
+        }
+        function renderRescue() {
+            const active = state.alerts.filter((alert) => alert.status !== "Resolved");
+            return `${pageHeading("FIELD RESPONSE", "Rescue team", "Coordinate trained responders and technicians across the property.", `<button class="button button-primary" type="button" data-go="incidents">Open emergency queue</button>`)}
+                <div class="stats-grid"><article class="stat-card"><div class="stat-top">On-call responders<span class="stat-icon">${icon("users")}</span></div><div class="stat-value">3 <span style="font-size:14px;color:#a0aab6;font-weight:500">/ 4</span></div><div class="stat-foot">One responder off shift</div></article><article class="stat-card"><div class="stat-top">Awaiting assignment<span class="stat-icon amber">${icon("clock")}</span></div><div class="stat-value">${active.filter((item) => item.status === "Received").length}</div><div class="stat-foot">Check the emergency queue</div></article></div>
+                <div class="content-grid">${team.map((member) => `<article class="team-card"><div class="card-top"><div><div class="card-title">${member.name}</div><div class="card-description">${member.role}</div></div><span class="tag">${member.status}</span></div><div class="person-row"><span class="avatar">${member.initials}</span><span><span class="fleet-title">${member.eta}</span><span class="fleet-detail">Northpoint Residences</span></span></div><div class="card-actions"><button class="button button-small" type="button" data-go="incidents">View assignments</button><button class="button button-small" type="button" data-toast="Responder contact options are managed by the building safety desk.">Contact</button></div></article>`).join("")}</div>
+                <section class="panel" style="margin-top:16px"><div class="panel-heading"><div><h3>Response queue</h3><p>Current active calls requiring field coordination</p></div></div><div class="table-wrap"><table><thead><tr><th>Alert</th><th>Elevator &amp; location</th><th>Incident</th><th>Status</th><th>Action</th></tr></thead><tbody>${alertRows(active)}</tbody></table></div></section>`;
+        }
+        function renderElevators() {
+            return `${pageHeading("FLEET MANAGEMENT", "Elevators", "Monitor connectivity, availability, and inspection status across the building.", `<button class="button" type="button" data-toast="Elevator inventory is managed by your property administrator.">${icon("plus")} Add elevator</button>`)}
+                <div class="status-strip"><span class="pulse"></span><strong>14 of 16 elevators online</strong><span>·</span><span>Telemetry synced just now</span></div>
+                <div class="content-grid">${lifts.map((lift) => `<article class="lift-card"><div class="card-top"><div><div class="card-title">Elevator ${lift.id}</div><div class="card-description">${lift.building} · ${lift.floor}</div></div>${lift.state === "Operational" ? `<span class="online">Online</span>` : `<span class="tag" style="color:#a76b1e;background:#fff2dc">${lift.state}</span>`}</div><div class="card-meta"><span>Uptime <strong>${lift.uptime}%</strong></span><span>Capacity <strong>13 persons</strong></span><span>Last inspection <strong>Nov 18</strong></span></div><div class="card-actions"><button class="button button-small" type="button" data-go="maintenance">View service history</button><button class="button button-small" type="button" data-go="passenger">Report fault</button></div></article>`).join("")}</div>`;
+        }
+        function renderMaintenance() {
+            return `${pageHeading("PREVENTIVE CARE", "Maintenance", "Keep equipment dependable with planned inspections and clear work orders.", `<button class="button button-primary" type="button" data-toast="Work order form is ready for your maintenance team.">${icon("plus")} Create work order</button>`)}
+                <div class="stats-grid"><article class="stat-card"><div class="stat-top">Open work orders<span class="stat-icon amber">${icon("wrench")}</span></div><div class="stat-value">2</div><div class="stat-foot">One currently in progress</div></article><article class="stat-card"><div class="stat-top">Overdue inspections<span class="stat-icon red">${icon("clock")}</span></div><div class="stat-value">1</div><div class="stat-foot">Elevator B-01 · inspection due</div></article></div>
+                <section class="panel"><div class="panel-heading"><div><h3>Maintenance schedule</h3><p>Recent and upcoming work across Northpoint Residences</p></div></div><div class="table-wrap"><table><thead><tr><th>Work order</th><th>Equipment</th><th>Task</th><th>Priority</th><th>Due</th><th>Action</th></tr></thead><tbody>${maintenance.map((item) => `<tr><td class="cell-strong">${item.id}</td><td>${item.lift}</td><td>${item.issue}</td><td><span class="tag">${item.priority}</span></td><td>${item.due}</td><td>${item.priority === "Completed" ? `<span class="cell-sub">Complete</span>` : `<button class="button button-small" type="button" data-maintenance-done="${item.id}">Mark complete</button>`}</td></tr>`).join("")}</tbody></table></div></section>`;
+        }
+        function renderAdmin() {
+            const roles = [
+                ["Jordan Miller", "Building administrator", "Building-wide alerts, elevator fleet, and team coordination", "JM"],
+                ["Priya Sharma", "Rescue team lead", "Assigned emergencies, acknowledgments, and dispatch updates", "PS"],
+                ["Morgan Lee", "Maintenance manager", "Equipment status, inspections, and service work orders", "ML"],
+                ["Resident access", "Passenger", "Submit SOS alerts and view personal response progress", "RA"]
+            ];
+            return `${pageHeading("SYSTEM SETTINGS", "Administration", "Manage access, notification routing, and the health of the safety service.", `<button class="button button-primary" type="button" data-toast="Invite link created for a new building operator.">${icon("plus")} Invite operator</button>`)}
+                <div class="stats-grid"><article class="stat-card"><div class="stat-top">Service status<span class="stat-icon">${icon("check")}</span></div><div class="stat-value" style="font-size:19px">Healthy</div><div class="stat-foot"><span class="positive">All APIs responding</span></div></article><article class="stat-card"><div class="stat-top">Connected buildings<span class="stat-icon blue">${icon("lift")}</span></div><div class="stat-value">3</div><div class="stat-foot">Northpoint · Harbor · Central</div></article></div>
+                <section class="panel"><div class="panel-heading"><div><h3>Operator access</h3><p>Role-based permissions for building safety operations</p></div></div><div class="content-grid">${roles.map((role) => `<article class="role-card"><div class="card-top"><div><div class="card-title">${role[0]}</div><div class="card-description">${role[1]}</div></div><span class="tag">Active</span></div><div class="person-row"><span class="avatar">${role[3]}</span><span class="card-description">${role[2]}</span></div></article>`).join("")}</div></section>
+                <section class="panel" style="margin-top:16px"><div class="panel-heading"><div><h3>System health</h3><p>Core components and last heartbeat</p></div></div><div class="fleet-list"><div class="fleet-row"><span class="fleet-title">Emergency alert service</span><span class="online">Operational</span></div><div class="fleet-row"><span class="fleet-title">Building notification relay</span><span class="online">Operational</span></div><div class="fleet-row"><span class="fleet-title">Alert history storage</span><span class="online">Persistent</span></div></div></section>`;
+        }
+        function renderPassenger() {
+            const alert = state.currentAlert;
+            const currentStatus = alert ? alert.status || "Received" : "";
+            const steps = ["Alert registered", "Team acknowledged", "Rescue dispatched", "Resolved"];
+            const activeStep = currentStatus === "Received" ? 0 : currentStatus === "Acknowledged" ? 1 : currentStatus === "Rescue dispatched" ? 2 : 3;
+            const tracking = alert ? `<article class="panel tracking-card"><div class="tracking-heading"><span class="tracking-check">✓</span><span><h3>${currentStatus === "Resolved" ? "You’re safe" : "Your alert is with us"}</h3><p>Building response team has been notified.</p></span></div><div class="tracking-id"><span>EMERGENCY REFERENCE</span><strong>${escapeHtml(alert.emergencyId || alert.EmergencyId)}</strong></div>${statusBadge(currentStatus)}<div class="timeline">${steps.map((step, index) => `<div class="timeline-item ${index <= activeStep ? "done" : ""}"><span class="timeline-dot"></span><strong>${step}</strong><span>${index === 0 ? timestamp(alert.submittedAt || alert.SubmittedAt) : index <= activeStep ? "Updated by the response team" : "Waiting for update"}</span></div>`).join("")}</div><button class="button" type="button" style="width:100%;margin-top:9px" data-return-home>Return to overview</button></article>` :
+                `<article class="panel tracking-card"><div class="tracking-heading"><span class="tracking-check" style="color:#5d7186;background:#eef2f6">${icon("shield")}</span><span><h3>Response support is ready</h3><p>Your call goes to the building team.</p></span></div><div class="tracking-id"><span>RESPONSE COVERAGE</span><strong style="font-family:inherit;font-size:12px">24 hours · 7 days</strong></div><p class="card-description">Only use this SOS form for a real elevator emergency. For immediate danger, contact local emergency services.</p><div class="timeline"><div class="timeline-item done"><span class="timeline-dot"></span><strong>Alert received by safety desk</strong><span>Automatic notification</span></div><div class="timeline-item"><span class="timeline-dot"></span><strong>Rescue team responds</strong><span>Live progress updates</span></div></div></article>`;
+            return `${pageHeading("PASSENGER SUPPORT", alert ? "Emergency response" : "Need help with your elevator?", alert ? "Your response reference and the latest team updates are shown below." : "Send a direct alert to the building rescue team and administrator.", "")}
+                <div class="sos-layout"><section class="panel sos-card"><h2>${alert ? "Report another emergency" : "Request emergency help"}</h2><p>We’ll share your elevator and floor with the building response team.</p><div class="location-box">${icon("pin")}<span><strong>Elevator A-03 · Northpoint Residences</strong><span>North tower · Floor 12 · Passenger Alex Morgan</span></span></div><fieldset style="border:0;padding:0;margin:0"><legend class="field-label">What is happening?</legend><div class="radio-list"><label class="radio-option"><input type="radio" name="category" value="Trapped inside elevator" checked> I’m trapped inside the elevator</label><label class="radio-option"><input type="radio" name="category" value="Elevator stopped / fault"> The elevator has stopped or has a fault</label><label class="radio-option"><input type="radio" name="category" value="Other urgent issue"> Another urgent elevator issue</label></div></fieldset><button id="submit-sos" class="button button-danger sos-button" type="button">SEND EMERGENCY SOS</button><p class="fine-print">Your alert is sent to the registered rescue team and building administrator.</p></section>${tracking}</div>`;
+        }
+        function render() {
+            document.getElementById("breadcrumb").textContent = viewTitles[state.view];
+            updateStorageIndicator();
+            document.querySelectorAll(".nav-button").forEach((button) => button.classList.toggle("active", button.dataset.view === state.view));
+            const pages = { overview: renderOverview, incidents: renderIncidents, rescue: renderRescue, elevators: renderElevators, maintenance: renderMaintenance, passenger: renderPassenger, admin: renderAdmin };
+            content.innerHTML = pages[state.view]();
+            if (state.view === "overview" && state.storageMode === "local") {
+                document.getElementById("system-health-label").textContent = "Browser demo is ready";
+                document.getElementById("system-health-detail").textContent = "Alerts save only on this device";
+            }
+        }
+        function navigate(view) {
+            if (!viewTitles[view]) return;
+            state.view = view;
+            render();
+            content.focus({ preventScroll: true });
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+        async function updateAlertStatus(id, status) {
+            try {
+                if (state.storageMode === "local") {
+                    const alert = state.alerts.find((item) => (item.emergencyId || item.EmergencyId) === id);
+                    if (!alert) throw new Error("Emergency alert not found in this browser.");
+                    alert.status = status;
+                    saveLocalAlerts();
+                    updateNavCount();
+                } else {
+                    await api(`/api/sos/${encodeURIComponent(id)}/status`, {
+                        method: "POST",
+                        body: JSON.stringify({ status })
+                    });
+                    await refreshAlerts();
+                }
+                if (state.currentAlert && (state.currentAlert.emergencyId || state.currentAlert.EmergencyId) === id) {
+                    state.currentAlert = state.alerts.find((alert) => (alert.emergencyId || alert.EmergencyId) === id) || state.currentAlert;
+                }
+                render();
+                showToast(`Alert ${id} updated to ${status.toLowerCase()}.`);
+            } catch (error) {
+                showToast(error.message, true);
+            }
+        }
+        document.getElementById("navigation").addEventListener("click", (event) => {
+            const button = event.target.closest("[data-view]");
+            if (button) navigate(button.dataset.view);
+        });
+        document.getElementById("notification-button").addEventListener("click", () => navigate("incidents"));
+        content.addEventListener("click", async (event) => {
+            const go = event.target.closest("[data-go]");
+            if (go) { navigate(go.dataset.go); return; }
+            const action = event.target.closest("[data-alert-action]");
+            if (action) { await updateAlertStatus(action.dataset.alertAction, action.dataset.nextStatus); return; }
+            const toastButton = event.target.closest("[data-toast]");
+            if (toastButton) { showToast(toastButton.dataset.toast); return; }
+            if (event.target.closest("[data-refresh]")) {
+                try { await refreshAlerts(); showToast("Emergency list refreshed."); }
+                catch (error) { showToast(error.message, true); }
+                return;
+            }
+            const maintenanceButton = event.target.closest("[data-maintenance-done]");
+            if (maintenanceButton) {
+                const item = maintenance.find((row) => row.id === maintenanceButton.dataset.maintenanceDone);
+                if (item) { item.priority = "Completed"; render(); showToast(`${item.id} marked complete.`); }
+                return;
+            }
+            if (event.target.closest("[data-return-home]")) { state.currentAlert = null; navigate("overview"); return; }
+            if (event.target.closest("#submit-sos")) {
+                const button = document.getElementById("submit-sos");
+                const selected = document.querySelector('input[name="category"]:checked');
+                if (!selected || !button) return;
+                button.disabled = true;
+                button.textContent = "SENDING ALERT…";
+                try {
+                    const payload = {
+                            passenger_id: "P-1001",
+                            passenger_name: "Alex Morgan",
+                            elevator_id: "A-03",
+                            location: "North tower · Floor 12",
+                            category: selected.value
+                        };
+                    if (state.storageMode === "local") {
+                        const alert = {
+                            emergencyId: `EM-${new Date().getFullYear()}-${Math.random().toString(16).slice(2, 9).toUpperCase()}`,
+                            passengerId: payload.passenger_id,
+                            passengerName: payload.passenger_name,
+                            elevatorId: payload.elevator_id,
+                            location: payload.location,
+                            category: payload.category,
+                            submittedAt: new Date().toISOString(),
+                            status: "Received"
+                        };
+                        state.alerts.unshift(alert);
+                        saveLocalAlerts();
+                        updateNavCount();
+                        state.currentAlert = alert;
+                    } else {
+                        const result = await api("/api/sos/submit", {
+                            method: "POST",
+                            body: JSON.stringify(payload)
+                        });
+                        await refreshAlerts();
+                        state.currentAlert = state.alerts.find((alert) => (alert.emergencyId || alert.EmergencyId) === result.emergency_id) || result.alert;
+                    }
+                    if (!state.currentAlert) throw new Error("The alert was saved but could not be loaded for tracking.");
+                    const emergencyId = state.currentAlert.emergencyId || state.currentAlert.EmergencyId;
+                    render();
+                    showToast(`Emergency alert ${emergencyId} sent to the response team.`);
+                } catch (error) {
+                    showToast(error.message, true);
+                    button.disabled = false;
+                    button.textContent = "SEND EMERGENCY SOS";
+                }
+            }
+        });
+        async function initialize() {
+            try {
+                const result = await api("/api/sos");
+                const alerts = Array.isArray(result) ? result : result.alerts;
+                if (!Array.isArray(alerts)) throw new Error("The safety service returned an invalid emergency list.");
+                state.alerts = alerts;
+                state.storageMode = "live";
+                updateNavCount();
+                render();
+            } catch {
+                state.storageMode = "local";
+                try {
+                    state.alerts = readLocalAlerts();
+                    updateNavCount();
+                    render();
+                    showToast("Browser demo mode: alerts are saved only in this browser.");
+                } catch (error) {
+                    content.innerHTML = `<section class="panel"><div class="empty-state"><strong>Couldn’t load saved browser data</strong>${escapeHtml(error.message)}</div></section>`;
+                    showToast(error.message, true);
+                }
+            }
+        }
+        initialize();
+    </script>
+</body>
+</html>
