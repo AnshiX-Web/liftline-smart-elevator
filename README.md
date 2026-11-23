@@ -2,6 +2,8 @@
 
 Liftline is the working web application for the report’s first software increment. It implements the passenger SOS path, role-controlled rescue and maintenance workspaces, administrator monitoring/history, and elevator/user administration.
 
+The GitHub Pages classroom demo is browser-only: role workflows are simulated and saved in that browser. It needs no local server, but it does not contact staff or emergency services. The full Flask backend remains in this repository for a separately hosted deployment.
+
 ## Implemented workflows
 
 - **Passenger:** one-tap SOS with a registered lift, default “Trapped inside elevator” category, request reference, private status-tracking link, and optional detail/name fields.
