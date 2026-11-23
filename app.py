@@ -616,7 +616,10 @@ def create_app(test_config=None):
         TWILIO_AUTH_TOKEN=os.environ.get("TWILIO_AUTH_TOKEN"),
         TWILIO_FROM_NUMBER=os.environ.get("TWILIO_FROM_NUMBER"),
         MANUAL_EMERGENCY_NUMBER=os.environ.get("MANUAL_EMERGENCY_NUMBER", ""),
-        PUBLIC_BASE_URL=os.environ.get("PUBLIC_BASE_URL", ""),
+        PUBLIC_BASE_URL=(
+            os.environ.get("PUBLIC_BASE_URL")
+            or os.environ.get("RENDER_EXTERNAL_URL", "")
+        ),
         ESCALATION_MINUTES=os.environ.get("ESCALATION_MINUTES", "2"),
         SESSION_COOKIE_SECURE=app_environment == "production",
         SESSION_COOKIE_HTTPONLY=True,

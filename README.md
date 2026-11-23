@@ -47,13 +47,17 @@ The application is a Flask server, not a static site. GitHub Pages cannot run it
 
 For a container host, build with `docker build -t liftline .`, configure the required environment variables in the host’s secret manager, and mount persistent storage at `/data`. The container listens on `PORT` (default `8000`). Never enable demo seeding in production.
 
+### Fast Render launch
+
+After this repository is pushed to its public `main` branch, use the [Render Blueprint](https://render.com/deploy?repo=https://github.com/AnshiX-Web/liftline-smart-elevator). It provisions the Docker app, HTTPS health check, and a 1 GB persistent disk in Singapore. Render will prompt for `BOOTSTRAP_ADMIN_EMAIL` and `BOOTSTRAP_ADMIN_PASSWORD`; choose a unique email and a password of at least 12 characters. Review Render’s displayed pricing before confirming—the persistent disk and web service are paid resources. Render supplies the public service URL automatically for cabin QR codes. Email/SMS remain in-app only until you add provider credentials in the Render dashboard.
+
 Required production settings:
 
 - `APP_ENV=production`
 - `SECRET_KEY` — a long random secret
 - `DATABASE_PATH=/data/liftline.sqlite`
 - `BOOTSTRAP_ADMIN_EMAIL` and `BOOTSTRAP_ADMIN_PASSWORD` for the first system administrator (password must be at least 12 characters)
-- `PUBLIC_BASE_URL` — the HTTPS site origin used in cabin QR codes
+- `PUBLIC_BASE_URL` — optional HTTPS site origin used in cabin QR codes; Render’s generated HTTPS URL is used automatically if omitted
 - `TRUSTED_PROXY_HOPS` — set only to the exact number of trusted reverse proxies in front of the app; leave `0` when directly exposed
 
 Optional notification settings are `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`, and the `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` variables. `MANUAL_EMERGENCY_NUMBER` can provide a phone number for the passenger’s explicit native-SMS fallback link when offline. Configure these as host secrets/settings, not in source control. Add staff accounts with current contact details and test delivery before inviting students.
