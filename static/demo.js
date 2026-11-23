@@ -14,10 +14,10 @@
         emergencies: [],
         maintenance: [],
         users: [
-            { name: "Rescue Lead", email: "rescue@demo.local", role: "rescue_team", active: true },
-            { name: "Campus Administrator", email: "admin@demo.local", role: "building_admin", active: true },
-            { name: "Maintenance Engineer", email: "maintenance@demo.local", role: "maintenance_engineer", active: true },
-            { name: "System Administrator", email: "sysadmin@demo.local", role: "system_admin", active: true }
+            { name: "Rescue Lead", email: "rescue@liftline.test", role: "rescue_team", active: true },
+            { name: "Campus Administrator", email: "admin@liftline.test", role: "building_admin", active: true },
+            { name: "Maintenance Engineer", email: "maintenance@liftline.test", role: "maintenance_engineer", active: true },
+            { name: "System Administrator", email: "sysadmin@liftline.test", role: "system_admin", active: true }
         ],
         notifications: []
     };
@@ -79,13 +79,13 @@
             button.classList.toggle("active", button.dataset.view === state.view);
         });
         document.getElementById("sidebar-name").textContent = state.user?.name || "Not signed in";
-        document.getElementById("sidebar-role").textContent = roles[state.user?.role] || "Passenger demo";
+        document.getElementById("sidebar-role").textContent = roles[state.user?.role] || "Passenger";
         document.getElementById("sidebar-avatar").textContent = (state.user?.name || "?").split(/\s+/).map((part) => part[0]).slice(0, 2).join("").toUpperCase();
-        document.getElementById("account-button").textContent = state.user ? "Sign out" : "Demo sign in";
+        document.getElementById("account-button").textContent = state.user ? "Sign out" : "Sign in";
         document.getElementById("breadcrumb").textContent = ({
             overview: "Overview", incidents: "Emergencies", rescue: "Rescue team", elevators: "Elevators",
             maintenance: "Maintenance", history: "Emergency history", passenger: "Passenger SOS",
-            admin: "Administration", login: "Demo sign in"
+            admin: "Administration", login: "Sign in"
         })[state.view] || "Passenger SOS";
         const count = activeEmergencies().length;
         const navCount = document.getElementById("nav-count");
@@ -94,7 +94,7 @@
         const dot = document.querySelector(".icon-button .dot");
         const unread = state.db.notifications.filter((item) => !item.read).length;
         dot.hidden = !state.user || unread === 0;
-        dot.title = unread ? `${unread} demo notification${unread === 1 ? "" : "s"}` : "No new demo notifications";
+        dot.title = unread ? `${unread} notification${unread === 1 ? "" : "s"}` : "No new notifications";
         const buildingSelect = document.getElementById("building-select");
         buildingSelect.innerHTML = `<option value="all">All buildings</option>${[...new Set(state.db.elevators.map((item) => item.building))].map((building) => `<option>${escapeHtml(building)}</option>`).join("")}`;
     }
@@ -102,72 +102,72 @@
     function renderPassenger() {
         const tracked = state.db.emergencies.find((item) => item.id === state.trackedId);
         if (tracked) {
-            return `${heading("PASSENGER SUPPORT", "Emergency submitted", "Classroom simulation — no real rescue alert was sent.")}
-                <article class="panel tracking-card"><div class="tracking-heading"><span class="tracking-check">✓</span><span><h3>Demo request recorded</h3><p>Saved in this browser only. Use this reference to show the staff workflow.</p></span></div>
-                <div class="tracking-id"><span>DEMO REFERENCE</span><strong>${escapeHtml(tracked.id)}</strong></div>
+            return `${heading("PASSENGER SUPPORT", "Emergency submitted", "Presentation mode — no real rescue alert was sent.")}
+                <article class="panel tracking-card"><div class="tracking-heading"><span class="tracking-check">✓</span><span><h3>Request recorded</h3><p>Saved in this browser only; no response team was notified.</p></span></div>
+                <div class="tracking-id"><span>EMERGENCY REFERENCE</span><strong>${escapeHtml(tracked.id)}</strong></div>
                 <p class="card-description">${escapeHtml(tracked.building)} · ${escapeHtml(tracked.elevator_id)} · ${escapeHtml(tracked.location)}</p>
                 <p>Location manually selected · unverified</p>${badge(tracked.status)}
                 <div class="timeline">${tracked.history.map((item) => `<div class="timeline-item done"><span class="timeline-dot"></span><strong>${escapeHtml(item.status)}</strong><span>${time(item.at)} · ${escapeHtml(item.note)}</span></div>`).join("")}</div>
-                <button class="button" data-action="new-sos">Report another demo SOS</button></article>`;
+                <button class="button" data-action="new-sos">Report another emergency</button></article>`;
         }
         const lift = currentLift();
-        return `${heading("PASSENGER SUPPORT", "Need help with your elevator?", "One-tap SOS demonstration for a registered lift.")}
-            <div class="sos-layout"><section class="panel sos-card"><h2>Emergency SOS</h2><p>Category and details are optional. This demo stores requests in your browser only.</p>
+        return `${heading("PASSENGER SUPPORT", "Need help with your elevator?", "One-tap emergency request associated with a registered lift.")}
+            <div class="sos-layout"><section class="panel sos-card"><h2>Emergency SOS</h2><p>Category and details are optional. Requests are stored in this browser only.</p>
             <div class="location-box"><span><strong>${escapeHtml(lift?.id || "No lift")} · ${escapeHtml(lift?.building || "")}</strong><span>${escapeHtml(lift?.location || "")} · Floors ${escapeHtml(lift?.floors || "")}</span></span></div>
             <form id="demo-sos-form"><div class="form-field"><label>Elevator</label><select name="elevator_id">${state.db.elevators.map((item) => `<option value="${escapeHtml(item.id)}" ${item.id === state.selectedElevator ? "selected" : ""}>${escapeHtml(item.id)} · ${escapeHtml(item.building)} · ${escapeHtml(item.location)}</option>`).join("")}</select></div>
             <div class="form-field"><label>Category (optional)</label><select name="category"><option>Trapped inside elevator</option><option>Elevator stopped / fault</option><option>Other urgent issue</option></select></div>
             <div class="form-field"><label>Additional details (optional)</label><textarea name="description" maxlength="500"></textarea></div>
             <div class="form-field"><label>Name (optional)</label><input name="requester_name" maxlength="80"></div>
-            <button class="button button-danger sos-button" type="submit">SEND DEMO SOS</button></form></section>
-            <article class="panel tracking-card"><h3>Classroom demo</h3><p class="card-description">No staff are notified. No email, SMS, elevator control, or emergency-service dispatch occurs.</p><div class="timeline"><div class="timeline-item done"><span class="timeline-dot"></span><strong>Register request</strong><span>Stored in this browser</span></div><div class="timeline-item"><span class="timeline-dot"></span><strong>Demo staff response</strong><span>Switch to Rescue team to advance it</span></div><div class="timeline-item"><span class="timeline-dot"></span><strong>Track progress</strong><span>View status in this browser</span></div></div></article></div>`;
+            <button class="button button-danger sos-button" type="submit">SEND EMERGENCY SOS</button></form></section>
+            <article class="panel tracking-card"><h3>Presentation mode</h3><p class="card-description">No staff are notified. No email, SMS, elevator control, or emergency-service dispatch occurs.</p><div class="timeline"><div class="timeline-item done"><span class="timeline-dot"></span><strong>Register request</strong><span>Stored in this browser</span></div><div class="timeline-item"><span class="timeline-dot"></span><strong>Staff response</strong><span>Switch to Rescue team to advance it</span></div><div class="timeline-item"><span class="timeline-dot"></span><strong>Track progress</strong><span>View status in this browser</span></div></div></article></div>`;
     }
 
     function emergencyRows(items) {
-        if (!items.length) return `<div class="empty-state"><strong>No demo emergencies</strong>Submit a passenger SOS to populate the queue.</div>`;
+        if (!items.length) return `<div class="empty-state"><strong>No emergency requests</strong>Submit a passenger SOS to populate the queue.</div>`;
         return `<div class="table-wrap"><table><thead><tr><th>Reference</th><th>Elevator / location</th><th>Category</th><th>Status</th><th>Action</th></tr></thead><tbody>${items.map((item) => `<tr><td class="cell-strong">${escapeHtml(item.id)}<div class="cell-sub">${time(item.created_at)}</div></td><td>${escapeHtml(item.elevator_id)} · ${escapeHtml(item.building)}<div class="cell-sub">${escapeHtml(item.location)}</div></td><td>${escapeHtml(item.category)}</td><td>${badge(item.status)}</td><td>${item.status === "New" ? `<button class="button button-small" data-action="accept" data-id="${item.id}">Accept</button>` : item.status === "Accepted" ? `<button class="button button-small" data-action="status" data-status="In Progress" data-id="${item.id}">Start response</button>` : item.status === "In Progress" ? `<button class="button button-small" data-action="status" data-status="Resolved" data-id="${item.id}">Resolve</button>` : `<span class="cell-sub">Recorded</span>`}</td></tr>`).join("")}</tbody></table></div>`;
     }
 
     function renderOverview() {
-        return `${heading("SAFETY OPERATIONS · DEMO", "Campus overview", "All records below are saved in this browser for presentation.")}
-            <div class="stats-grid"><article class="stat-card"><div class="stat-top">Active demo emergencies</div><div class="stat-value">${activeEmergencies().length}</div><div class="stat-foot">New, accepted, or in progress</div></article><article class="stat-card"><div class="stat-top">Registered lifts</div><div class="stat-value">${state.db.elevators.length}</div><div class="stat-foot">Sample elevator register</div></article><article class="stat-card"><div class="stat-top">Resolved / closed</div><div class="stat-value">${state.db.emergencies.filter((item) => ["Resolved", "Closed"].includes(item.status)).length}</div><div class="stat-foot">Demo history</div></article><article class="stat-card"><div class="stat-top">Open maintenance</div><div class="stat-value">${state.db.maintenance.filter((item) => item.status !== "Closed").length}</div><div class="stat-foot">Simulated service requests</div></article></div>
-            <section class="panel"><div class="panel-heading"><div><h3>Recent emergencies</h3><p>Changes are visible to other demo roles in this browser.</p></div></div>${emergencyRows(state.db.emergencies.slice().reverse().slice(0, 8))}</section>`;
+        return `${heading("SAFETY OPERATIONS", "Campus overview", "Records are saved in this browser for presentation.")}
+            <div class="stats-grid"><article class="stat-card"><div class="stat-top">Active emergencies</div><div class="stat-value">${activeEmergencies().length}</div><div class="stat-foot">New, accepted, or in progress</div></article><article class="stat-card"><div class="stat-top">Registered lifts</div><div class="stat-value">${state.db.elevators.length}</div><div class="stat-foot">Elevator register</div></article><article class="stat-card"><div class="stat-top">Resolved / closed</div><div class="stat-value">${state.db.emergencies.filter((item) => ["Resolved", "Closed"].includes(item.status)).length}</div><div class="stat-foot">Emergency history</div></article><article class="stat-card"><div class="stat-top">Open maintenance</div><div class="stat-value">${state.db.maintenance.filter((item) => item.status !== "Closed").length}</div><div class="stat-foot">Service requests</div></article></div>
+            <section class="panel"><div class="panel-heading"><div><h3>Recent emergencies</h3><p>Changes are visible to other workspaces in this browser.</p></div></div>${emergencyRows(state.db.emergencies.slice().reverse().slice(0, 8))}</section>`;
     }
 
     function renderIncidents() {
-        return `${heading("LIVE QUEUE · SIMULATED", "Emergencies", "Advance sample requests through the rescue workflow.")}<section class="panel">${emergencyRows(state.db.emergencies.slice().reverse())}</section>`;
+        return `${heading("LIVE QUEUE", "Emergencies", "Advance requests through the rescue workflow.")}<section class="panel">${emergencyRows(state.db.emergencies.slice().reverse())}</section>`;
     }
 
     function renderRescue() {
         const queue = state.db.emergencies.filter((item) => !["Resolved", "Closed"].includes(item.status));
-        return `${heading("FIELD RESPONSE · DEMO", "Rescue team", "Accept requests, record response progress, and resolve the incident.")}<section class="panel"><div class="panel-heading"><div><h3>Rescue queue</h3><p>${queue.length} active demo request${queue.length === 1 ? "" : "s"}</p></div></div>${emergencyRows(queue)}</section>`;
+        return `${heading("FIELD RESPONSE", "Rescue team", "Accept requests, record response progress, and resolve incidents.")}<section class="panel"><div class="panel-heading"><div><h3>Rescue queue</h3><p>${queue.length} active request${queue.length === 1 ? "" : "s"}</p></div></div>${emergencyRows(queue)}</section>`;
     }
 
     function renderMaintenance() {
-        return `${heading("SERVICE REQUESTS · DEMO", "Maintenance", "Create and close simulated inspection or repair records.")}
-            <section class="panel" style="margin-bottom:16px"><form id="demo-maintenance-form"><div class="form-row"><div class="form-field"><label>Elevator</label><select name="elevator_id">${state.db.elevators.map((item) => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.id)} · ${escapeHtml(item.building)}</option>`).join("")}</select></div><div class="form-field"><label>Priority</label><select name="priority"><option>Normal</option><option>High</option><option>Urgent</option></select></div></div><div class="form-field"><label>Inspection / repair details</label><textarea name="description" required></textarea></div><button class="button button-primary">Create demo work order</button></form></section>
-            <section class="content-grid">${state.db.maintenance.length ? state.db.maintenance.slice().reverse().map((item) => `<article class="maintenance-card"><div class="card-top"><div class="card-title">${escapeHtml(item.id)} · ${escapeHtml(item.elevator_id)}</div>${badge(item.status)}</div><p>${escapeHtml(item.description)}</p><p class="cell-sub">${escapeHtml(item.priority)} priority · ${time(item.created_at)}</p>${item.status !== "Closed" ? `<button class="button button-small" data-action="close-maintenance" data-id="${item.id}">Close work order</button>` : ""}</article>`).join("") : `<article class="panel"><div class="empty-state"><strong>No maintenance work</strong>Create a demo work order above.</div></article>`}</section>`;
+        return `${heading("SERVICE REQUESTS", "Maintenance", "Create and close inspection or repair records.")}
+            <section class="panel" style="margin-bottom:16px"><form id="demo-maintenance-form"><div class="form-row"><div class="form-field"><label>Elevator</label><select name="elevator_id">${state.db.elevators.map((item) => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.id)} · ${escapeHtml(item.building)}</option>`).join("")}</select></div><div class="form-field"><label>Priority</label><select name="priority"><option>Normal</option><option>High</option><option>Urgent</option></select></div></div><div class="form-field"><label>Inspection / repair details</label><textarea name="description" required></textarea></div><button class="button button-primary">Create work order</button></form></section>
+            <section class="content-grid">${state.db.maintenance.length ? state.db.maintenance.slice().reverse().map((item) => `<article class="maintenance-card"><div class="card-top"><div class="card-title">${escapeHtml(item.id)} · ${escapeHtml(item.elevator_id)}</div>${badge(item.status)}</div><p>${escapeHtml(item.description)}</p><p class="cell-sub">${escapeHtml(item.priority)} priority · ${time(item.created_at)}</p>${item.status !== "Closed" ? `<button class="button button-small" data-action="close-maintenance" data-id="${item.id}">Close work order</button>` : ""}</article>`).join("") : `<article class="panel"><div class="empty-state"><strong>No maintenance work</strong>Create a work order above.</div></article>`}</section>`;
     }
 
     function renderElevators() {
-        return `${heading("REGISTERED EQUIPMENT · DEMO", "Elevators", "Manage the sample lift register for this browser session.")}
-            <section class="panel" style="margin-bottom:16px"><form id="demo-elevator-form"><div class="form-row"><div class="form-field"><label>Elevator ID</label><input name="id" required></div><div class="form-field"><label>Building</label><input name="building" required></div></div><div class="form-row"><div class="form-field"><label>Location</label><input name="location" required></div><div class="form-field"><label>Floors served</label><input name="floors" required></div></div><button class="button button-primary">Add demo elevator</button></form></section>
+        return `${heading("REGISTERED EQUIPMENT", "Elevators", "Manage the lift register for this presentation.")}
+            <section class="panel" style="margin-bottom:16px"><form id="demo-elevator-form"><div class="form-row"><div class="form-field"><label>Elevator ID</label><input name="id" required></div><div class="form-field"><label>Building</label><input name="building" required></div></div><div class="form-row"><div class="form-field"><label>Location</label><input name="location" required></div><div class="form-field"><label>Floors served</label><input name="floors" required></div></div><button class="button button-primary">Add elevator</button></form></section>
             <section class="panel"><div class="table-wrap"><table><thead><tr><th>Elevator</th><th>Building / location</th><th>Floors</th><th>Status</th></tr></thead><tbody>${state.db.elevators.map((item) => `<tr><td class="cell-strong">${escapeHtml(item.id)}</td><td>${escapeHtml(item.building)}<div class="cell-sub">${escapeHtml(item.location)}</div></td><td>${escapeHtml(item.floors)}</td><td>${badge(item.status)}</td></tr>`).join("")}</tbody></table></div></section>`;
     }
 
     function renderHistory() {
         const rows = state.db.emergencies.filter((item) => ["Resolved", "Closed"].includes(item.status));
-        return `${heading("AUDITABLE RECORDS · DEMO", "Emergency history", "Resolved and closed requests are kept in this browser.")}<section class="panel"><div class="panel-heading"><div><h3>History</h3></div><button class="button button-small" data-action="export">Export CSV</button></div>${emergencyRows(rows)}</section>`;
+        return `${heading("AUDITABLE RECORDS", "Emergency history", "Resolved and closed requests are retained in this browser.")}<section class="panel"><div class="panel-heading"><div><h3>History</h3></div><button class="button button-small" data-action="export">Export CSV</button></div>${emergencyRows(rows)}</section>`;
     }
 
     function renderAdmin() {
-        return `${heading("AUTHORIZED ADMINISTRATION · DEMO", "Users & access", "Role controls are simulated; no real authentication is active.")}
-            <section class="panel" style="margin-bottom:16px"><form id="demo-user-form"><div class="form-row"><div class="form-field"><label>Name</label><input name="name" required></div><div class="form-field"><label>Email</label><input name="email" type="email" required></div></div><div class="form-field"><label>Role</label><select name="role">${Object.entries(roles).map(([key, label]) => `<option value="${key}">${label}</option>`).join("")}</select></div><button class="button button-primary">Add demo account</button></form></section>
-            <section class="panel"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Action</th></tr></thead><tbody>${state.db.users.map((user, i) => `<tr><td>${escapeHtml(user.name)}</td><td>${escapeHtml(user.email)}</td><td>${escapeHtml(roles[user.role] || user.role)}</td><td>${user.active ? "Active" : "Disabled"}</td><td>${user.active ? `<button class="button button-small" data-action="disable-user" data-index="${i}">Disable</button>` : ""}</td></tr>`).join("")}</tbody></table></div><button class="button button-small" data-action="reset">Reset demo data</button></section>`;
+        return `${heading("AUTHORIZED ADMINISTRATION", "Users & access", "Role management is simulated in this browser.")}
+            <section class="panel" style="margin-bottom:16px"><form id="demo-user-form"><div class="form-row"><div class="form-field"><label>Name</label><input name="name" required></div><div class="form-field"><label>Email</label><input name="email" type="email" required></div></div><div class="form-field"><label>Role</label><select name="role">${Object.entries(roles).map(([key, label]) => `<option value="${key}">${label}</option>`).join("")}</select></div><button class="button button-primary">Add account</button></form></section>
+            <section class="panel"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Action</th></tr></thead><tbody>${state.db.users.map((user, i) => `<tr><td>${escapeHtml(user.name)}</td><td>${escapeHtml(user.email)}</td><td>${escapeHtml(roles[user.role] || user.role)}</td><td>${user.active ? "Active" : "Disabled"}</td><td>${user.active ? `<button class="button button-small" data-action="disable-user" data-index="${i}">Disable</button>` : ""}</td></tr>`).join("")}</tbody></table></div><button class="button button-small" data-action="reset">Reset presentation data</button></section>`;
     }
 
     function renderLogin() {
-        return `${heading("CLASSROOM DEMO", "Choose a workspace", "Role switching is simulated and requires no password.")}
-            <section class="panel"><p>Select a role to demonstrate its workflow. All records remain in this browser.</p><div class="content-grid">${Object.entries(roles).map(([role, name]) => `<button class="button" data-action="login" data-role="${role}">Continue as ${escapeHtml(name)}</button>`).join("")}</div></section>`;
+        return `${heading("SIGN IN", "Choose a workspace", "Select a role to present its workflow.")}
+            <section class="panel"><p>Role switching is simulated and requires no password. Records remain in this browser.</p><div class="content-grid">${Object.entries(roles).map(([role, name]) => `<button class="button" data-action="login" data-role="${role}">Continue as ${escapeHtml(name)}</button>`).join("")}</div></section>`;
     }
 
     function render() {
@@ -177,7 +177,7 @@
             rescue: renderRescue, maintenance: renderMaintenance, elevators: renderElevators,
             history: renderHistory, admin: renderAdmin, login: renderLogin
         };
-        content.innerHTML = `<div class="warning-panel"><strong>Teacher demo — not for real emergencies</strong><span>Simulated workflows only. Data is saved in this browser; no staff or emergency services are contacted.</span></div>${pages[state.view]()}${state.notice ? `<div class="toast">${escapeHtml(state.notice)}</div>` : ""}`;
+        content.innerHTML = `<div class="warning-panel"><strong>Presentation mode — not for real emergencies</strong><span>Workflows are simulated. Data is saved in this browser; no staff or emergency services are contacted.</span></div>${pages[state.view]()}${state.notice ? `<div class="toast">${escapeHtml(state.notice)}</div>` : ""}`;
         state.notice = "";
     }
 
@@ -223,7 +223,7 @@
         }
         if (button.id === "notification-button") {
             const notices = state.db.notifications.slice(0, 8);
-            window.alert(notices.length ? notices.map((item) => `${item.title}: ${item.message}`).join("\n") : "No demo notifications.");
+            window.alert(notices.length ? notices.map((item) => `${item.title}: ${item.message}`).join("\n") : "No notifications.");
             state.db.notifications.forEach((item) => { item.read = true; });
             save();
             render();
@@ -256,7 +256,7 @@
             state.db.users[Number(button.dataset.index)].active = false;
             save(); render();
         } else if (button.dataset.action === "reset") {
-            if (window.confirm("Reset this browser’s classroom demo data?")) {
+            if (window.confirm("Reset this browser’s presentation data?")) {
                 state.db = structuredClone(seed);
                 state.trackedId = "";
                 save(); render();
@@ -268,7 +268,7 @@
             )].join("\r\n");
             const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
             const link = document.createElement("a");
-            link.href = url; link.download = "liftline-demo-history.csv"; link.click();
+            link.href = url; link.download = "liftline-emergency-history.csv"; link.click();
             URL.revokeObjectURL(url);
         }
     }
@@ -285,7 +285,7 @@
                 id, elevator_id: lift.id, building: lift.building, location: lift.location,
                 requester_name: data.requester_name, category: data.category || "Trapped inside elevator",
                 description: data.description || "", status: "New", created_at: new Date().toISOString(),
-                history: [{ status: "New", at: new Date().toISOString(), note: "Demo request registered" }]
+                history: [{ status: "New", at: new Date().toISOString(), note: "Request registered in this browser" }]
             };
             state.db.emergencies.push(emergency);
             notify("New elevator emergency", `${id} · ${lift.building} · ${lift.id} · ${emergency.category}`);
@@ -300,7 +300,7 @@
             save(); render();
         } else if (form.id === "demo-elevator-form") {
             if (state.db.elevators.some((item) => item.id === data.id)) {
-                window.alert("That demo elevator ID already exists.");
+                window.alert("That elevator ID already exists.");
                 return;
             }
             state.db.elevators.push({ ...data, status: "Unknown" });
