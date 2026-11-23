@@ -28,6 +28,7 @@ jobs:
         run: |
           mkdir -p dist
           cp index.html dist/index.html
+          cp college-data.json dist/college-data.json
       - name: Upload site artifact
         uses: actions/upload-pages-artifact@v3
         with:

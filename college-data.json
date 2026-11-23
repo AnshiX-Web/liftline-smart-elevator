@@ -1,0 +1,36 @@
+{
+  "collegeName": "College Campus",
+  "emergencyChannelConfigured": false,
+  "buildings": [
+    {
+      "id": "old-building",
+      "name": "Old Building",
+      "lifts": [
+        {
+          "id": "Lift 1",
+          "floorsServed": 3
+        }
+      ]
+    },
+    {
+      "id": "new-building",
+      "name": "New Building",
+      "lifts": [
+        {
+          "id": "Lift 2",
+          "floorsServed": 3
+        }
+      ]
+    },
+    {
+      "id": "admin-block",
+      "name": "Admin Block",
+      "lifts": [
+        {
+          "id": "Lift 3",
+          "floorsServed": 3
+        }
+      ]
+    }
+  ]
+}
